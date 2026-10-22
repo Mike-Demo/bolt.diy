@@ -1,4 +1,7 @@
 interface Env {
+  MCP_OWNER_USERNAME?: string;
+  MCP_OWNER_PASSWORD?: string;
+  MCP_ALLOW_STDIO?: string;
   RUNNING_IN_DOCKER: Settings;
   DEFAULT_NUM_CTX: Settings;
   ANTHROPIC_API_KEY: string;
