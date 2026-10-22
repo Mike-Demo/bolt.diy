@@ -105,7 +105,7 @@ export type MCPServerUnavailable = {
 export type MCPServer = MCPServerAvailable | MCPServerUnavailable;
 
 export class MCPService {
-  private static _instance: MCPService;
+  private static _instances = new Map<string, MCPService>();
   private _tools: ToolSet = {};
   private _toolsWithoutExecute: ToolSet = {};
   private _mcpToolsPerServer: MCPServerTools = {};
@@ -114,12 +114,23 @@ export class MCPService {
     mcpServers: {},
   };
 
-  static getInstance(): MCPService {
-    if (!MCPService._instance) {
-      MCPService._instance = new MCPService();
+  constructor(private _allowStdio = process.env.MCP_ALLOW_STDIO === 'true') {}
+
+  static getInstance(principal: string, allowStdio = process.env.MCP_ALLOW_STDIO === 'true'): MCPService {
+    if (!principal) {
+      throw new Error('An authenticated principal is required for shared MCP state');
     }
 
-    return MCPService._instance;
+    let instance = MCPService._instances.get(principal);
+
+    if (!instance) {
+      instance = new MCPService();
+      MCPService._instances.set(principal, instance);
+    }
+
+    instance._allowStdio = allowStdio;
+
+    return instance;
   }
 
   private _validateServerConfig(serverName: string, config: any): MCPServerConfig {
@@ -199,6 +210,10 @@ export class MCPService {
   }
 
   private async _createStdioClient(serverName: string, config: STDIOServerConfig): Promise<MCPClient> {
+    if (!this._allowStdio) {
+      throw new Error('Server-side MCP stdio is disabled; the operator must set MCP_ALLOW_STDIO=true to enable it');
+    }
+
     logger.debug(
       `Creating STDIO client for '${serverName}' with command: '${config.command}' ${config.args?.join(' ') || ''}`,
     );

@@ -28,7 +28,7 @@ function createWriter(): TestWriter {
 }
 
 function serviceWithTools(tools: Record<string, unknown>) {
-  const internals = MCPService.getInstance() as unknown as {
+  const internals = MCPService.getInstance('test-principal') as unknown as {
     _tools: Record<string, unknown>;
     _toolsWithoutExecute: Record<string, unknown>;
     _toolNamesToServerNames: Map<string, string>;
@@ -71,7 +71,7 @@ describe('MCPService.processToolInvocations', () => {
   });
 
   it('returns messages untouched when the last message has no parts', async () => {
-    const service = MCPService.getInstance();
+    const service = MCPService.getInstance('test-principal');
     const messages = [{ id: 'm1', role: 'user', content: 'hi' }] as never[];
 
     await expect(service.processToolInvocations(messages, createWriter())).resolves.toBe(messages);

@@ -28,6 +28,7 @@ import { getWebResearchInstructions } from '~/lib/.server/llm/prompt-web-tools';
 import { getFilePaths, selectContext } from '~/lib/.server/llm/select-context';
 import { streamText, type StreamingOptions } from '~/lib/.server/llm/stream-text';
 import { extractPropertiesFromMessage } from '~/lib/.server/llm/utils';
+import { getMCPServiceForRequest } from '~/lib/.server/mcp-auth';
 import { getApiKeysFromCookie, getProviderSettingsFromCookie } from '~/lib/api/cookies';
 import { getAgentLoopInstructions, getAgentLoopProgress } from '~/lib/common/agentLoop';
 import { CONTINUE_PROMPT } from '~/lib/common/prompts/prompts';
@@ -36,7 +37,6 @@ import { createMessage, getMessageText } from '~/lib/persistence/messageMigratio
 import { getPluginToolDescriptions, getPluginTools } from '~/lib/plugins/adapters';
 import { getProjectToolNames, projectToolDefinitions } from '~/lib/runtime/projectMcp.shared';
 import { withSecurity } from '~/lib/security';
-import { MCPService } from '~/lib/services/mcpService';
 import type { ContextAnnotation, ProgressAnnotation, ToolCallAnnotation } from '~/types/context';
 import type { IProviderSetting } from '~/types/model';
 import { WORK_DIR } from '~/utils/constants';
@@ -103,7 +103,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
   let progressCounter: number = 1;
 
   try {
-    const mcpService = MCPService.getInstance();
+    const mcpService = getMCPServiceForRequest(request, context);
     const totalMessageContent = messages.reduce((acc, message) => acc + getMessageText(message), '');
     logger.debug(`Total message length: ${totalMessageContent.split(' ').length}, words`);
 
