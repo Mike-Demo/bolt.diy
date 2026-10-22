@@ -2,6 +2,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import type { LanguageModel } from 'ai';
 import { getEnv } from './env';
 import type { ProviderInfo, ProviderConfig, ModelInfo } from './types';
+import { validatePublicHttpUrl } from '~/lib/services/publicUrl';
 import type { IProviderSetting } from '~/types/model';
 
 /** Default timeout for model listing API calls (5 seconds) */
@@ -79,6 +80,10 @@ export abstract class BaseProvider implements ProviderInfo {
       settingsBaseUrl = undefined;
     }
 
+    if (settingsBaseUrl) {
+      settingsBaseUrl = validatePublicHttpUrl(settingsBaseUrl).toString();
+    }
+
     const baseUrlKey = this.config.baseUrlKey || defaultBaseUrlKey;
 
     let baseUrl =
@@ -95,7 +100,10 @@ export abstract class BaseProvider implements ProviderInfo {
     const apiTokenKey = this.config.apiTokenKey || defaultApiTokenKey;
 
     const apiKey =
-      apiKeys?.[this.name] || serverEnv?.[apiTokenKey] || process?.env?.[apiTokenKey] || managerEnv?.[apiTokenKey];
+      apiKeys?.[this.name] ||
+      (settingsBaseUrl
+        ? undefined
+        : serverEnv?.[apiTokenKey] || process?.env?.[apiTokenKey] || managerEnv?.[apiTokenKey]);
 
     return {
       baseUrl,
